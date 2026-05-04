@@ -1,0 +1,203 @@
+{
+  "name": "EAS Daily Audit Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "minutesInterval": 0,
+              "hoursInterval": 1,
+              "triggerAtHour": 22,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Daily Cron (10PM)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/repos/={{ $env.GITHUB_REPO }}/commits",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        },
+        "queryParameters": {
+          "parameters": [{ "name": "per_page", "value": "30" }]
+        }
+      },
+      "id": "github-commits",
+      "name": "Fetch GitHub Commits",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 200]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.DEPLOY_LOGS_URL }}",
+        "method": "GET",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "deploy-logs",
+      "name": "Fetch Deploy Logs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 400]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "eas-ai-logs",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-ai-logs",
+      "name": "Receive AI Logs (Webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize all events into EAS unified schema\nconst commits = $('Fetch GitHub Commits').all().flatMap(item =>\n  (item.json || []).map(c => ({\n    task_id: null,\n    event_type: 'commit',\n    timestamp: c.commit?.author?.date,\n    source: 'github',\n    metadata: {\n      sha: c.sha?.slice(0, 12),\n      message: c.commit?.message?.slice(0, 200),\n      author: c.commit?.author?.name,\n    }\n  }))\n);\n\nconst deployLogs = $('Fetch Deploy Logs').all().flatMap(item =>\n  (Array.isArray(item.json) ? item.json : [item.json]).map(d => ({\n    task_id: d.task_id || null,\n    event_type: 'deploy',\n    timestamp: d.timestamp || d.created_at,\n    source: d.platform || 'deploy',\n    metadata: {\n      service: d.service || d.name,\n      status: d.status,\n      url: d.url,\n    }\n  }))\n);\n\nconst aiLogs = $('Receive AI Logs (Webhook)').all().map(item => ({\n  task_id: item.json.task_id,\n  event_type: 'ai',\n  timestamp: item.json.timestamp,\n  source: `proxy:${item.json.provider}`,\n  metadata: {\n    provider: item.json.provider,\n    prompt_snippet: (item.json.prompt || '').slice(0, 100),\n    has_output: !!item.json.response,\n  }\n}));\n\nreturn [{ json: { events: [...commits, ...deployLogs, ...aiLogs] } }];"
+      },
+      "id": "normalize-events",
+      "name": "Normalize Events",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, 400]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.EAS_API_URL }}/report/generate",
+        "method": "POST",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [{ "name": "events", "value": "={{ JSON.stringify($json.events) }}" }]
+        },
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "trigger-score",
+      "name": "Trigger EAS Scoring",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 400]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.EAS_API_URL }}/report/daily",
+        "method": "GET",
+        "options": {
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      },
+      "id": "fetch-report",
+      "name": "Fetch Daily Report",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "const report = $input.first().json;\nconst score = report?.summary?.average_score ?? 0;\nconst grade = report?.summary?.score_grade ?? 'N/A';\nconst bottlenecks = (report?.analysis?.bottlenecks || []).slice(0,2);\nconst actions = (report?.analysis?.corrective_actions || []).slice(0,3);\n\nconst summary = [\n  `📊 EAS Daily Audit — ${report?.meta?.date}`,\n  `Score: ${score}/100 (${grade})`,\n  `Tasks: ${report?.summary?.completed_tasks}/${report?.summary?.total_tasks} completed`,\n  '',\n  '🔴 Bottlenecks:',\n  ...bottlenecks.map((b,i) => `${i+1}. ${b.title} [${b.classification}]`),\n  '',\n  '⚡ Actions:',\n  ...actions.map((a,i) => `${i+1}. ${a.action}`),\n].join('\\n');\n\nreturn [{ json: { summary, raw_report: report } }];"
+      },
+      "id": "format-output",
+      "name": "Format Report Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 400]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.EAS_API_URL }}/event/github",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ events: $json.events.filter(e => e.event_type === 'commit') }) }}",
+        "options": {}
+      },
+      "id": "store-events",
+      "name": "Store Events in EAS DB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 600]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "check-score",
+              "leftValue": "={{ $json.raw_report?.summary?.average_score }}",
+              "rightValue": 40,
+              "operator": { "type": "number", "operation": "lt" }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-low-score",
+      "name": "Low Score Alert?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1320, 400]
+    }
+  ],
+  "connections": {
+    "Daily Cron (10PM)": {
+      "main": [[
+        { "node": "Fetch GitHub Commits", "type": "main", "index": 0 },
+        { "node": "Fetch Deploy Logs", "type": "main", "index": 0 }
+      ]]
+    },
+    "Fetch GitHub Commits": {
+      "main": [[{ "node": "Normalize Events", "type": "main", "index": 0 }]]
+    },
+    "Fetch Deploy Logs": {
+      "main": [[{ "node": "Normalize Events", "type": "main", "index": 0 }]]
+    },
+    "Receive AI Logs (Webhook)": {
+      "main": [[{ "node": "Normalize Events", "type": "main", "index": 0 }]]
+    },
+    "Normalize Events": {
+      "main": [[
+        { "node": "Trigger EAS Scoring", "type": "main", "index": 0 },
+        { "node": "Store Events in EAS DB", "type": "main", "index": 0 }
+      ]]
+    },
+    "Trigger EAS Scoring": {
+      "main": [[{ "node": "Fetch Daily Report", "type": "main", "index": 0 }]]
+    },
+    "Fetch Daily Report": {
+      "main": [[{ "node": "Format Report Summary", "type": "main", "index": 0 }]]
+    },
+    "Format Report Summary": {
+      "main": [[{ "node": "Low Score Alert?", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": { "templateCredsSetupCompleted": true },
+  "pinData": {}
+}
