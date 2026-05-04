@@ -1,6 +1,5 @@
 # render.yaml — Render Blueprint
 # Defines all EAS services for one-click deployment
-# https://render.com/docs/blueprint-spec
 
 services:
   # ── API ──────────────────────────────────────────────────────────────────
@@ -46,11 +45,11 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: OPENAI_API_KEY
-        sync: false   # set manually in Render dashboard
+        sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
 
-  # ── Worker + Beat (combined to save free slots) ──────────────────────────
+  # ── Worker + Beat ────────────────────────────────────────────────────────
   - type: worker
     name: eas-worker
     runtime: python
@@ -93,12 +92,13 @@ services:
       - key: ANTHROPIC_API_KEY
         sync: false
 
+  # ── Redis (FIXED: moved from databases → services) ───────────────────────
+  - type: redis
+    name: eas-redis
+    plan: free
+
 databases:
   - name: eas-db
     databaseName: eas_db
     user: eas_user
     plan: free
-
-  - name: eas-redis
-    plan: free
-    ipAllowList: []
