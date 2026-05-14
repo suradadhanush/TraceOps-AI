@@ -35,11 +35,11 @@ class ProxyRequest(BaseModel):
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _inject_task_id(payload: dict, task_id: Optional[str]) -> dict:
-    """Inject [EAS-task_id] into the system or first user message."""
+    """Inject [TRO-task_id] into the system or first user message."""
     if not task_id:
         return payload
 
-    tag = f"[EAS-{task_id}]"
+    tag = f"[TRO-{task_id}]"
     messages = payload.get("messages", [])
 
     if not messages:
@@ -94,7 +94,7 @@ async def _log_to_db(
     )
     db.add(log)
 
-    # Also emit an EAS event
+    # Also emit a TraceOps event
     has_output = bool(response and len(response.strip()) > 10)
     event = Event(
         task_id=task_id,

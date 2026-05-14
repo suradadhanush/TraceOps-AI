@@ -56,7 +56,7 @@ async def start_task(req: TaskStartRequest, db: AsyncSession = Depends(get_db)):
         "started_at": task.started_at,
         "status": task.status,
         "instructions": (
-            f"Add [EAS-{task.id}] to your git commits. "
+            f"Add [TRO-{task.id}] to your git commits. "
             f"Send task_id='{task.id}' with all AI proxy requests."
         ),
     }

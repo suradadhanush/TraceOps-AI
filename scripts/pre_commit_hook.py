@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-EAS Git Pre-Commit Hook
+TraceOps AI Git Pre-Commit Hook
 
 Enforces TASK_ID pattern in commit messages.
 Install: python scripts/install_hook.py
@@ -9,7 +9,7 @@ import re
 import subprocess
 import sys
 
-TASK_ID_PATTERN = re.compile(r'\[EAS-[a-f0-9\-]{8,}\]', re.IGNORECASE)
+TASK_ID_PATTERN = re.compile(r'\[TRO-[a-f0-9\-]{8,}\]', re.IGNORECASE)
 BYPASS_FLAG = "--no-eas"  # git commit --no-verify bypasses all hooks
 
 
@@ -39,17 +39,17 @@ def main():
         sys.exit(0)
 
     if TASK_ID_PATTERN.search(msg):
-        print(f"✅ EAS: TASK_ID found in commit message.")
+        print(f"✅ TraceOps: TASK_ID found in commit message.")
         sys.exit(0)
 
     # No TASK_ID found — show helpful error
-    print("\n❌ EAS COMMIT REJECTED: Missing TASK_ID\n")
+    print("\n❌ TRACEOPS COMMIT REJECTED: Missing TASK_ID\n")
     print("Your commit message:")
     print(f"  {msg[:100]}")
     print("\nRequired format:")
-    print("  <message> [EAS-<task-id>]")
+    print("  <message> [TRO-<task-id>]")
     print("\nExample:")
-    print("  fix: resolve JWT expiry bug [EAS-abc12345]")
+    print("  fix: resolve JWT expiry bug [TRO-abc12345]")
     print("\nGet your active task IDs:")
     print("  curl http://localhost:8000/task/?status=active")
     print("\nTo bypass (not recommended):")

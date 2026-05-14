@@ -116,7 +116,7 @@ class TestStructuredLogging:
         from app.core.logger import JSONFormatter
         formatter = JSONFormatter()
         record = logging.LogRecord(
-            name="eas.test", level=logging.INFO,
+            name="traceops.test", level=logging.INFO,
             pathname="", lineno=0, msg="test message",
             args=(), exc_info=None,
         )
@@ -133,7 +133,7 @@ class TestStructuredLogging:
         from app.core.logger import JSONFormatter
         formatter = JSONFormatter()
         record = logging.LogRecord(
-            name="eas.task", level=logging.INFO,
+            name="traceops.task", level=logging.INFO,
             pathname="", lineno=0, msg="task start",
             args=(), exc_info=None,
         )
@@ -147,7 +147,7 @@ class TestStructuredLogging:
     def test_get_logger_name(self):
         from app.core.logger import get_logger
         log = get_logger("test_module")
-        assert log.name == "eas.test_module"
+        assert log.name == "traceops.test_module"
 
     def test_log_helpers_dont_crash(self):
         from app.core.logger import (
@@ -199,7 +199,7 @@ class TestProxyEnforcement:
 class TestConfigPersistence:
     def test_config_key_constant(self):
         from app.services.config_store import _CONFIG_KEY
-        assert _CONFIG_KEY == "eas_global_config_v3"
+        assert _CONFIG_KEY == "traceops_global_config_v1"
 
     def test_config_store_orm_has_correct_table(self):
         from app.services.config_store import ConfigStore

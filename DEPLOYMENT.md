@@ -1,4 +1,4 @@
-# EAS Free Deployment Guide — v3 Final
+# TraceOps AI — Free Deployment Guide
 
 Total cost: ₹0/month. Stack: Render (API + Worker + PostgreSQL + Redis) + GitHub Actions CI.
 
@@ -10,10 +10,10 @@ Total cost: ₹0/month. Stack: Render (API + Worker + PostgreSQL + Redis) + GitH
 GitHub repo
   └─ GitHub Actions      CI on every push
        └─ Render
-            ├─ eas-api   FastAPI (free web service, 512MB)
-            ├─ eas-worker Celery worker+beat combined (free)
-            ├─ eas-db    PostgreSQL 16 (free, 1GB, 90-day TTL)
-            └─ eas-redis Redis 7 (free, 25MB)
+            ├─ traceops-api   FastAPI (free web service, 512MB)
+            ├─ traceops-worker Celery worker+beat combined (free)
+            ├─ traceops-db    PostgreSQL 16 (free, 1GB, 90-day TTL)
+            └─ traceops-redis Redis 7 (free, 25MB)
 
 UptimeRobot → /health/deep every 14 min (prevents sleep, detects desync)
 ```
@@ -39,7 +39,7 @@ UptimeRobot → /health/deep every 14 min (prevents sleep, detects desync)
 cd eas
 git init
 git add .
-git commit -m "EAS v3 initial [EAS-bootstrap]"
+git commit -m "TraceOps AI initial [TRO-bootstrap]"
 
 # Create public repo at github.com/<you>/eas, then:
 git remote add origin https://github.com/<you>/eas.git
@@ -70,7 +70,7 @@ python scripts/install_hook.py
 
 Dashboard → New → PostgreSQL
 ```
-Name:    eas-db
+Name:    traceops-db
 Plan:    Free
 Region:  Singapore
 ```
@@ -80,7 +80,7 @@ Save the **Internal Database URL**.
 
 Dashboard → New → Redis
 ```
-Name:    eas-redis
+Name:    traceops-redis
 Plan:    Free
 ```
 Save the **Internal Redis URL**.
@@ -89,7 +89,7 @@ Save the **Internal Redis URL**.
 
 Dashboard → New → Web Service → Connect repo
 ```
-Name:          eas-api
+Name:          traceops-api
 Runtime:       Python 3
 Build Command: pip install -r requirements.txt
 Start Command: uvicorn main:app --host 0.0.0.0 --port $PORT
@@ -119,7 +119,7 @@ Note: For DATABASE_URL, replace `postgresql://` with `postgresql+asyncpg://`.
 
 Dashboard → New → Web Service → same repo
 ```
-Name:          eas-worker
+Name:          traceops-worker
 Start Command: celery -A app.core.celery_app.celery_app worker --beat --loglevel=info --concurrency=2
 Plan:          Free
 ```
@@ -129,7 +129,7 @@ Add identical environment variables as API.
 
 ## Step 3 — Initialize Database
 
-After first deploy, open Render Shell on `eas-api`:
+After first deploy, open Render Shell on `traceops-api`:
 ```bash
 python -c "
 import asyncio
@@ -153,23 +153,23 @@ asyncio.run(init())
 
 ```bash
 # Health
-curl https://eas-api.onrender.com/health
-# → {"status":"ok","service":"eas","version":"3.0.0"}
+curl https://traceops-api.onrender.com/health
+# → {"status":"ok","service":"traceops","version":"3.0.0"}
 
 # Deep health (DB + Redis + Worker)
-curl https://eas-api.onrender.com/health/deep
+curl https://traceops-api.onrender.com/health/deep
 
 # First task
-curl -X POST https://eas-api.onrender.com/task/start \
+curl -X POST https://traceops-api.onrender.com/task/start \
   -H "Content-Type: application/json" \
-  -d '{"goal": "Test EAS v3 deployment", "target_level": 3}'
+  -d '{"goal": "Test TraceOps AI deployment", "target_level": 3}'
 
 # Metrics (requires key)
-curl https://eas-api.onrender.com/metrics/ \
+curl https://traceops-api.onrender.com/metrics/ \
   -H "X-Metrics-Key: <your-SECRET_KEY>"
 
 # Public metrics (no key)
-curl https://eas-api.onrender.com/metrics/public
+curl https://traceops-api.onrender.com/metrics/public
 ```
 
 ---
@@ -178,7 +178,7 @@ curl https://eas-api.onrender.com/metrics/public
 
 GitHub repo → Settings → Webhooks → Add webhook
 ```
-Payload URL:  https://eas-api.onrender.com/event/github
+Payload URL:  https://traceops-api.onrender.com/event/github
 Content type: application/json
 Events:       Just the push event
 ```
@@ -191,7 +191,7 @@ Events:       Just the push event
 2. Add Monitor:
    ```
    Type:     HTTP(s)
-   URL:      https://eas-api.onrender.com/health/deep
+   URL:      https://traceops-api.onrender.com/health/deep
    Interval: 5 minutes
    ```
 3. Add alert contact (email) — you'll get notified if DB or Redis goes down.
@@ -212,7 +212,7 @@ Tests run automatically on every push to `main`.
 ## Daily Usage Workflow
 
 ```bash
-BASE=https://eas-api.onrender.com
+BASE=https://traceops-api.onrender.com
 KEY=<your-SECRET_KEY>
 
 # Start of day
@@ -289,14 +289,14 @@ curl $BASE/worker/scheduler/missed \
 Before day 90 (set a calendar reminder):
 ```bash
 # 1. Dump from Render external URL
-pg_dump $EXTERNAL_DB_URL > eas_backup_$(date +%Y%m%d).sql
+pg_dump $EXTERNAL_DB_URL > traceops_backup_$(date +%Y%m%d).sql
 
 # 2. Create new free PostgreSQL on Render (same settings)
 # 3. Restore
-psql $NEW_EXTERNAL_DB_URL < eas_backup_$(date +%Y%m%d).sql
+psql $NEW_EXTERNAL_DB_URL < traceops_backup_$(date +%Y%m%d).sql
 
 # 4. Update DATABASE_URL and SYNC_DATABASE_URL in both services
-# 5. Redeploy both eas-api and eas-worker
+# 5. Redeploy both traceops-api and traceops-worker
 ```
 
 ---

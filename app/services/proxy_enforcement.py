@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logger import log_proxy_bypass_warning
 from app.models.models import AIProxyLog, Event
 
-log = logging.getLogger("eas.proxy_enforcement")
+log = logging.getLogger("traceops.proxy_enforcement")
 
 PROXY_COVERAGE_MIN = 0.80     # warn if < 80% of expected AI events went through proxy
 BYPASS_GAP_HOURS   = 2.0      # gap in proxy logs > this hours = suspected bypass

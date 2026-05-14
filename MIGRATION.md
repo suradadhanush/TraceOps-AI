@@ -1,4 +1,4 @@
-# EAS Migration Notes
+# TraceOps AI Migration Notes
 
 ## v1 → v2 → v3 Upgrade Guide
 

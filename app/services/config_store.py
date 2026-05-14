@@ -1,7 +1,7 @@
 """
 Config Persistence Module (Fix 3)
 
-Stores all EAS threshold config in PostgreSQL (table: eas_config_store).
+Stores all TraceOps threshold config in PostgreSQL (table: traceops_config_store).
 Eliminates reliance on ephemeral container filesystem.
 
 On startup: load from DB → apply to eas_config singleton.
@@ -19,20 +19,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import Base, AsyncSessionLocal
 from app.core.eas_config import EASConfig, eas_config
 
-log = logging.getLogger("eas.config_store")
+log = logging.getLogger("traceops.config_store")
 
 
 # ── ORM model ─────────────────────────────────────────────────────────────────
 
 class ConfigStore(Base):
-    __tablename__ = "eas_config_store"
+    __tablename__ = "traceops_config_store"
 
     key        = Column(String(120), primary_key=True)
     value      = Column(Text, nullable=False)          # JSON blob
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-_CONFIG_KEY = "eas_global_config_v3"
+_CONFIG_KEY = "traceops_global_config_v1"
 
 
 # ── Persistence operations ────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ async def save_config_to_db(cfg: Optional[EASConfig] = None) -> bool:
             else:
                 db.add(ConfigStore(key=_CONFIG_KEY, value=payload))
             await db.commit()
-            log.info("eas_config persisted to DB")
+            log.info("traceops_config persisted to DB")
             return True
     except Exception as exc:
         log.warning(f"Config DB persist failed (using in-memory): {exc}")
@@ -95,7 +95,7 @@ async def load_config_from_db() -> Optional[EASConfig]:
                         if hasattr(section, k) and not k.startswith("_"):
                             setattr(section, k, v)
             cfg._tuning_log = data.get("_tuning_log", [])
-            log.info("eas_config loaded from DB")
+            log.info("traceops_config loaded from DB")
             return cfg
     except Exception as exc:
         log.warning(f"Config DB load failed (using defaults): {exc}")

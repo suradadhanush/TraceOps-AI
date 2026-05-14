@@ -17,7 +17,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 
-log = logging.getLogger("eas.scheduler")
+log = logging.getLogger("traceops.scheduler")
 
 router = APIRouter(prefix="/worker", tags=["Scheduler"])
 

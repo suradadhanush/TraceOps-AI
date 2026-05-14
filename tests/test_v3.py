@@ -1,5 +1,5 @@
 """
-EAS v3 Test Suite
+TraceOps AI v1 Test Suite
 
 Covers all 11 upgrade areas:
 - Task enforcement confidence scoring

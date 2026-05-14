@@ -1,9 +1,9 @@
 """
-EAS Threshold Configuration v3
+TraceOps AI Threshold Configuration v1
 
 Single source of truth for all tunable parameters.
 All modules import from here. Adaptive tuning engine writes back here at runtime.
-Never hardcode thresholds in business logic — always reference eas_config.
+Never hardcode thresholds in business logic — always reference traceops_config.
 """
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -12,7 +12,7 @@ import json
 import os
 
 # Config file path — tuning engine persists changes here
-_CONFIG_PATH = os.environ.get("EAS_CONFIG_PATH", "eas_config_state.json")
+_CONFIG_PATH = os.environ.get("TRACEOPS_CONFIG_PATH", "traceops_config_state.json")
 
 
 @dataclass
@@ -20,7 +20,7 @@ class TaskEnforcementConfig:
     auto_assign_confidence_min: float = 0.75      # below this → mark unassigned
     auto_assign_window_minutes: int = 60           # search radius for nearest task
     hmac_max_age_seconds: int = 300               # reject replays older than this
-    task_id_pattern: str = r'\[EAS-[a-f0-9\-]{8,}\]'  # commit message pattern
+    task_id_pattern: str = r'\[TRO-[a-f0-9\-]{8,}\]'  # commit message pattern
 
 
 @dataclass

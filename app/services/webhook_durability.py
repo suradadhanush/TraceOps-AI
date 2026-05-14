@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import Base, AsyncSessionLocal
 
-log = logging.getLogger("eas.webhook")
+log = logging.getLogger("traceops.webhook")
 
 MAX_RETRIES = 3
 

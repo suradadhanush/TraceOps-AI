@@ -2,7 +2,7 @@
 Event Normalizer
 
 Converts heterogeneous inputs (GitHub webhooks, AI proxy logs, deploy events)
-into the unified EAS event schema.
+into the unified TraceOps event schema.
 """
 from datetime import datetime
 from typing import Any, Optional
@@ -32,10 +32,10 @@ def normalize_github_commit(payload: dict, task_id: Optional[str] = None) -> dic
     normalized = []
     for commit in commits:
         task = task_id
-        # Try to extract TASK_ID from commit message: e.g. [EAS-abc123]
+        # Try to extract TASK_ID from commit message: e.g. [TRO-abc123]
         msg = commit.get("message", "")
         import re
-        match = re.search(r'\[EAS-([A-Za-z0-9-]+)\]', msg)
+        match = re.search(r'\[TRO-([A-Za-z0-9-]+)\]', msg)
         if match:
             task = match.group(1)
 

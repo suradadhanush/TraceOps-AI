@@ -234,9 +234,9 @@ async def enforce_task_id(
 
     if require_signature:
         if not signature or not timestamp:
-            raise ValueError("Missing X-EAS-Signature or X-EAS-Timestamp.")
+            raise ValueError("Missing X-TraceOps-Signature or X-TraceOps-Timestamp.")
         if not verify_proxy_signature(event_dict.get("task_id", ""), signature, timestamp):
-            raise PermissionError("Invalid or expired EAS proxy signature.")
+            raise PermissionError("Invalid or expired TraceOps proxy signature.")
 
     if not had_task_id:
         assigned_id, confidence = await auto_assign_task_id(event_dict, db)

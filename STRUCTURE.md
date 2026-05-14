@@ -1,7 +1,7 @@
-# Execution Audit System — Folder Structure
+# TraceOps AI — Folder Structure
 
 ```
-eas/
+TraceOps-AI/
 ├── app/
 │   ├── api/
 │   │   ├── __init__.py

@@ -4,15 +4,15 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: eas_db
-      POSTGRES_USER: eas_user
-      POSTGRES_PASSWORD: eas_pass
+      POSTGRES_DB: traceops_db
+      POSTGRES_USER: traceops_user
+      POSTGRES_PASSWORD: traceops_pass
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U eas_user -d eas_db"]
+      test: ["CMD-SHELL", "pg_isready -U traceops_user -d traceops_db"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -34,8 +34,8 @@ services:
       - "8000:8000"
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://eas_user:eas_pass@db:5432/eas_db
-      SYNC_DATABASE_URL: postgresql://eas_user:eas_pass@db:5432/eas_db
+      DATABASE_URL: postgresql+asyncpg://traceops_user:traceops_pass@db:5432/traceops_db
+      SYNC_DATABASE_URL: postgresql://traceops_user:traceops_pass@db:5432/traceops_db
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1
@@ -53,8 +53,8 @@ services:
     command: celery -A app.core.celery_app.celery_app worker --loglevel=info --concurrency=4
     env_file: .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://eas_user:eas_pass@db:5432/eas_db
-      SYNC_DATABASE_URL: postgresql://eas_user:eas_pass@db:5432/eas_db
+      DATABASE_URL: postgresql+asyncpg://traceops_user:traceops_pass@db:5432/traceops_db
+      SYNC_DATABASE_URL: postgresql://traceops_user:traceops_pass@db:5432/traceops_db
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/1

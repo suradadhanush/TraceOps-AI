@@ -1,5 +1,5 @@
 """
-Execution Audit System v3 — FastAPI Application
+TraceOps AI v3 — FastAPI Application
 """
 import time
 import uuid
@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
     # 3. Load persisted config from DB (replaces ephemeral file)
     applied = await apply_db_config_to_singleton()
     log.info("startup complete",
-             extra={"eas_config_from_db": applied, "eas_env": settings.APP_ENV})
+             extra={"traceops_config_from_db": applied, "traceops_env": settings.APP_ENV})
 
     yield
 
@@ -42,9 +42,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Execution Audit System",
-    description="Production-grade developer execution tracker. AI + Git + Deploy → scored daily audit.",
-    version="3.0.0",
+    title="TraceOps AI",
+    description="Production-grade developer execution tracker. AI-powered execution audit. Git + AI proxy + Deploy → daily scored report.",
+    version="1.0.0",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -64,26 +64,26 @@ async def logging_middleware(request: Request, call_next):
     request_id = str(uuid.uuid4())[:8]
     start = time.monotonic()
     log.info("request.start", extra={
-        "eas_request_id": request_id,
-        "eas_method": request.method,
-        "eas_path": request.url.path,
+        "traceops_request_id": request_id,
+        "traceops_method": request.method,
+        "traceops_path": request.url.path,
     })
     try:
         response: Response = await call_next(request)
         elapsed = int((time.monotonic() - start) * 1000)
         log.info("request.end", extra={
-            "eas_request_id": request_id,
-            "eas_status": response.status_code,
-            "eas_latency_ms": elapsed,
+            "traceops_request_id": request_id,
+            "traceops_status": response.status_code,
+            "traceops_latency_ms": elapsed,
         })
         response.headers["X-Request-ID"] = request_id
         return response
     except Exception as exc:
         elapsed = int((time.monotonic() - start) * 1000)
         log.error("request.error", extra={
-            "eas_request_id": request_id,
-            "eas_error": str(exc)[:200],
-            "eas_latency_ms": elapsed,
+            "traceops_request_id": request_id,
+            "traceops_error": str(exc)[:200],
+            "traceops_latency_ms": elapsed,
         })
         raise
 
@@ -99,7 +99,7 @@ app.include_router(scheduler_router)
 
 @app.get("/health", tags=["System"])
 async def health():
-    return {"status": "ok", "service": "eas", "version": "3.0.0"}
+    return {"status": "ok", "service": "traceops", "version": "1.0.0"}
 
 
 @app.get("/health/deep", tags=["System"])
@@ -118,4 +118,4 @@ async def health_deep():
 
 @app.get("/", tags=["System"])
 async def root():
-    return {"service": "Execution Audit System v3", "docs": "/docs", "health": "/health"}
+    return {"service": "TraceOps AI v1", "docs": "/docs", "health": "/health"}

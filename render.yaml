@@ -3,7 +3,7 @@
 services:
   # ── API ──────────────────────────────────────────────────────────────────
   - type: web
-    name: eas-api
+    name: traceops-api
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
@@ -20,25 +20,25 @@ services:
         value: gpt-4o-mini
       - key: DATABASE_URL
         fromDatabase:
-          name: eas-db
+          name: traceops-db
           property: connectionString
       - key: SYNC_DATABASE_URL
         fromDatabase:
-          name: eas-db
+          name: traceops-db
           property: connectionString
       - key: REDIS_URL
         fromService:
-          name: eas-redis
+          name: traceops-redis
           type: redis
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
-          name: eas-redis
+          name: traceops-redis
           type: redis
           property: connectionString
       - key: CELERY_RESULT_BACKEND
         fromService:
-          name: eas-redis
+          name: traceops-redis
           type: redis
           property: connectionString
       - key: SECRET_KEY
@@ -50,7 +50,7 @@ services:
 
   # ── Worker ───────────────────────────────────────────────────────────────
   - type: worker
-    name: eas-worker
+    name: traceops-worker
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: celery -A app.core.celery_app.celery_app worker --beat --loglevel=info --concurrency=2
@@ -60,30 +60,30 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: eas-db
+          name: traceops-db
           property: connectionString
       - key: SYNC_DATABASE_URL
         fromDatabase:
-          name: eas-db
+          name: traceops-db
           property: connectionString
       - key: REDIS_URL
         fromService:
-          name: eas-redis
+          name: traceops-redis
           type: redis
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
-          name: eas-redis
+          name: traceops-redis
           type: redis
           property: connectionString
       - key: CELERY_RESULT_BACKEND
         fromService:
-          name: eas-redis
+          name: traceops-redis
           type: redis
           property: connectionString
       - key: SECRET_KEY
         fromService:
-          name: eas-api
+          name: traceops-api
           type: web
           envVarKey: SECRET_KEY
       - key: OPENAI_API_KEY
@@ -93,12 +93,12 @@ services:
 
   # ── Redis ────────────────────────────────────────────────────────────────
   - type: redis
-    name: eas-redis
+    name: traceops-redis
     plan: free
     ipAllowList: []   # ✅ REQUIRED FIX
 
 databases:
-  - name: eas-db
-    databaseName: eas_db
-    user: eas_user
+  - name: traceops-db
+    databaseName: traceops_db
+    user: traceops_user
     plan: free

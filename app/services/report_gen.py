@@ -179,5 +179,5 @@ def report_to_markdown(report: dict) -> str:
             lines.append(f"- {w}")
         lines.append("")
 
-    lines += ["---", "*Execution Audit System v1.0*"]
+    lines += ["---", "*TraceOps AI v1.0*"]
     return "\n".join(lines)

@@ -38,8 +38,8 @@ class JSONFormatter(logging.Formatter):
         }
         # Attach structured fields passed via extra={}
         for k, v in record.__dict__.items():
-            if k.startswith("eas_"):
-                payload[k[4:]] = v  # strip "eas_" prefix
+            if k.startswith("traceops_"):
+                payload[k[9:]] = v  # strip "traceops_" prefix
 
         if record.exc_info:
             payload["exception"] = self.formatException(record.exc_info)
@@ -69,7 +69,7 @@ def configure_logging(level: str = "INFO") -> None:
 
 
 def get_logger(name: str) -> logging.Logger:
-    return logging.getLogger(f"eas.{name}")
+    return logging.getLogger(f"traceops.{name}")
 
 
 # ── Domain-specific log helpers ───────────────────────────────────────────────
@@ -83,20 +83,20 @@ _wh_log    = get_logger("webhook")
 
 def log_task_start(task_id: str, goal: str, target_level: int):
     _task_log.info("task.start", extra={
-        "eas_task_id": task_id,
-        "eas_goal": goal[:80],
-        "eas_target_level": target_level,
-        "eas_event": "task.start",
+        "traceops_task_id": task_id,
+        "traceops_goal": goal[:80],
+        "traceops_target_level": target_level,
+        "traceops_event": "task.start",
     })
 
 
 def log_task_end(task_id: str, final_level: int, score: int, duration_hours: float):
     _task_log.info("task.end", extra={
-        "eas_task_id": task_id,
-        "eas_final_level": final_level,
-        "eas_score": score,
-        "eas_duration_hours": round(duration_hours, 2),
-        "eas_event": "task.end",
+        "traceops_task_id": task_id,
+        "traceops_final_level": final_level,
+        "traceops_score": score,
+        "traceops_duration_hours": round(duration_hours, 2),
+        "traceops_event": "task.end",
     })
 
 
@@ -109,12 +109,12 @@ def log_correlation_decision(
 ):
     level = logging.WARNING if assigned_task_id is None else logging.INFO
     _corr_log.log(level, "correlation.decision", extra={
-        "eas_event_id": event_id,
-        "eas_event_type": event_type,
-        "eas_assigned_task": assigned_task_id,
-        "eas_confidence": confidence,
-        "eas_method": method,
-        "eas_event": "correlation.decision",
+        "traceops_event_id": event_id,
+        "traceops_event_type": event_type,
+        "traceops_assigned_task": assigned_task_id,
+        "traceops_confidence": confidence,
+        "traceops_method": method,
+        "traceops_event": "correlation.decision",
     })
 
 
@@ -128,14 +128,14 @@ def log_score_output(
     loop_detected: bool,
 ):
     _score_log.info("score.output", extra={
-        "eas_task_id": task_id,
-        "eas_final_score": final_score,
-        "eas_level": level,
-        "eas_velocity": velocity,
-        "eas_stability_penalty": stability_penalty,
-        "eas_ai_penalty": ai_penalty,
-        "eas_loop_detected": loop_detected,
-        "eas_event": "score.output",
+        "traceops_task_id": task_id,
+        "traceops_final_score": final_score,
+        "traceops_level": level,
+        "traceops_velocity": velocity,
+        "traceops_stability_penalty": stability_penalty,
+        "traceops_ai_penalty": ai_penalty,
+        "traceops_loop_detected": loop_detected,
+        "traceops_event": "score.output",
     })
 
 
@@ -149,38 +149,38 @@ def log_proxy_usage(
 ):
     level = logging.WARNING if suspected_bypass else logging.INFO
     _proxy_log.log(level, "proxy.usage", extra={
-        "eas_task_id": task_id,
-        "eas_provider": provider,
-        "eas_prompt_tokens": prompt_tokens,
-        "eas_latency_ms": latency_ms,
-        "eas_has_output": has_output,
-        "eas_suspected_bypass": suspected_bypass,
-        "eas_event": "proxy.usage",
+        "traceops_task_id": task_id,
+        "traceops_provider": provider,
+        "traceops_prompt_tokens": prompt_tokens,
+        "traceops_latency_ms": latency_ms,
+        "traceops_has_output": has_output,
+        "traceops_suspected_bypass": suspected_bypass,
+        "traceops_event": "proxy.usage",
     })
 
 
 def log_proxy_bypass_warning(gap_hours: float, direct_usage_estimate: int):
     _proxy_log.warning("proxy.bypass_suspected", extra={
-        "eas_gap_hours": gap_hours,
-        "eas_direct_usage_estimate": direct_usage_estimate,
-        "eas_event": "proxy.bypass_suspected",
+        "traceops_gap_hours": gap_hours,
+        "traceops_direct_usage_estimate": direct_usage_estimate,
+        "traceops_event": "proxy.bypass_suspected",
     })
 
 
 def log_webhook_received(source: str, event_type: Optional[str], ikey: str, is_duplicate: bool):
     _wh_log.info("webhook.received", extra={
-        "eas_source": source,
-        "eas_event_type": event_type,
-        "eas_ikey": ikey[:12],
-        "eas_duplicate": is_duplicate,
-        "eas_event": "webhook.received",
+        "traceops_source": source,
+        "traceops_event_type": event_type,
+        "traceops_ikey": ikey[:12],
+        "traceops_duplicate": is_duplicate,
+        "traceops_event": "webhook.received",
     })
 
 
 def log_webhook_failed(wh_id: int, attempt: int, error: str):
     _wh_log.error("webhook.failed", extra={
-        "eas_webhook_id": wh_id,
-        "eas_attempt": attempt,
-        "eas_error": error[:200],
-        "eas_event": "webhook.failed",
+        "traceops_webhook_id": wh_id,
+        "traceops_attempt": attempt,
+        "traceops_error": error[:200],
+        "traceops_event": "webhook.failed",
     })

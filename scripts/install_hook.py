@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install EAS pre-commit hook into current git repo."""
+"""Install TraceOps AI pre-commit hook into current git repo."""
 import os
 import shutil
 import stat
@@ -8,7 +8,7 @@ import sys
 
 HOOK_SOURCE = os.path.join(os.path.dirname(__file__), "pre_commit_hook.py")
 HOOK_CONTENT = f"""#!/bin/sh
-# EAS pre-commit hook (auto-installed)
+# TraceOps AI pre-commit hook (auto-installed)
 python3 "{os.path.abspath(HOOK_SOURCE)}"
 """
 
@@ -39,8 +39,8 @@ def main():
     st = os.stat(hook_path)
     os.chmod(hook_path, st.st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
 
-    print(f"✅ EAS commit-msg hook installed at {hook_path}")
-    print("   Commits without [EAS-<task_id>] will now be rejected.")
+    print(f"✅ TraceOps commit-msg hook installed at {hook_path}")
+    print("   Commits without [TRO-<task_id>] will now be rejected.")
 
 
 if __name__ == "__main__":

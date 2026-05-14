@@ -5,8 +5,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://eas_user:eas_pass@localhost:5432/eas_db"
-    SYNC_DATABASE_URL: str = "postgresql://eas_user:eas_pass@localhost:5432/eas_db"
+    DATABASE_URL: str = "postgresql+asyncpg://traceops_user:traceops_pass@localhost:5432/traceops_db"
+    SYNC_DATABASE_URL: str = "postgresql://traceops_user:traceops_pass@localhost:5432/traceops_db"
 
     # Redis / Celery
     REDIS_URL: str = "redis://localhost:6379/0"

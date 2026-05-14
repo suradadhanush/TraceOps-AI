@@ -1,4 +1,4 @@
-# Execution Audit System (EAS)
+# TraceOps AI
 
 Production-grade developer execution tracker. Aggregates AI usage, Git events, and deploy logs into a scored daily audit.
 
@@ -9,8 +9,8 @@ Production-grade developer execution tracker. Aggregates AI usage, Git events, a
 ### 1. Clone & configure
 
 ```bash
-git clone <your-repo>/eas
-cd eas
+git clone https://github.com/suradadhanush/TraceOps-AI.git
+cd TraceOps-AI
 cp .env.example .env
 # Edit .env: add OPENAI_API_KEY and/or ANTHROPIC_API_KEY
 ```
@@ -100,7 +100,7 @@ Response:
   "target_level": 4,
   "started_at": "2025-05-03T10:00:00",
   "status": "active",
-  "instructions": "Add [EAS-abc123-...] to your git commits."
+  "instructions": "Add [TRO-abc123-...] to your git commits."
 }
 ```
 
@@ -136,14 +136,14 @@ Configure your repo: `Settings → Webhooks → http://localhost:8000/event/gith
 ```bash
 curl -X POST "http://localhost:8000/event/deploy?task_id=abc123-..." \
   -H "Content-Type: application/json" \
-  -d '{"status": "failed", "platform": "render", "service": "eas-api", "url": "https://myapp.onrender.com"}'
+  -d '{"status": "failed", "platform": "render", "service": "traceops-api", "url": "https://myapp.onrender.com"}'
 ```
 
 ---
 
 ### AI Proxy
 
-Route your AI calls through EAS instead of directly to OpenAI/Anthropic.
+Route your AI calls through TraceOps AI proxy instead of directly to OpenAI/Anthropic.
 
 #### OpenAI via proxy
 ```bash
@@ -217,7 +217,7 @@ curl -X POST http://localhost:8000/task/start \
 ```
 
 **During the day:**
-- Commit with `[EAS-<task_id>]` in message
+- Commit with `[TRO-<task_id>]` in message
 - Route AI calls through proxy
 - Let Celery auto-fetch GitHub commits every 30 min
 
@@ -259,14 +259,14 @@ pytest tests/ -v
 
 ## Git Commit Convention
 
-Add `[EAS-<task_id>]` anywhere in your commit message:
+Add `[TRO-<task_id>]` anywhere in your commit message:
 
 ```
-feat: implement JWT refresh [EAS-abc123-...]
-fix: resolve loop in auth middleware [EAS-abc123-...]
+feat: implement JWT refresh [TRO-abc123-...]
+fix: resolve loop in auth middleware [TRO-abc123-...]
 ```
 
-EAS auto-correlates the commit to the task.
+TraceOps auto-correlates the commit to the task.
 
 ---
 

@@ -1,5 +1,5 @@
 {
-  "name": "EAS Daily Audit Workflow",
+  "name": "TraceOps AI Daily Audit Workflow",
   "nodes": [
     {
       "parameters": {
@@ -56,7 +56,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "eas-ai-logs",
+        "path": "traceops-ai-logs",
         "responseMode": "responseNode",
         "options": {}
       },
@@ -68,7 +68,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Normalize all events into EAS unified schema\nconst commits = $('Fetch GitHub Commits').all().flatMap(item =>\n  (item.json || []).map(c => ({\n    task_id: null,\n    event_type: 'commit',\n    timestamp: c.commit?.author?.date,\n    source: 'github',\n    metadata: {\n      sha: c.sha?.slice(0, 12),\n      message: c.commit?.message?.slice(0, 200),\n      author: c.commit?.author?.name,\n    }\n  }))\n);\n\nconst deployLogs = $('Fetch Deploy Logs').all().flatMap(item =>\n  (Array.isArray(item.json) ? item.json : [item.json]).map(d => ({\n    task_id: d.task_id || null,\n    event_type: 'deploy',\n    timestamp: d.timestamp || d.created_at,\n    source: d.platform || 'deploy',\n    metadata: {\n      service: d.service || d.name,\n      status: d.status,\n      url: d.url,\n    }\n  }))\n);\n\nconst aiLogs = $('Receive AI Logs (Webhook)').all().map(item => ({\n  task_id: item.json.task_id,\n  event_type: 'ai',\n  timestamp: item.json.timestamp,\n  source: `proxy:${item.json.provider}`,\n  metadata: {\n    provider: item.json.provider,\n    prompt_snippet: (item.json.prompt || '').slice(0, 100),\n    has_output: !!item.json.response,\n  }\n}));\n\nreturn [{ json: { events: [...commits, ...deployLogs, ...aiLogs] } }];"
+        "jsCode": "// Normalize all events into TraceOps unified schema\nconst commits = $('Fetch GitHub Commits').all().flatMap(item =>\n  (item.json || []).map(c => ({\n    task_id: null,\n    event_type: 'commit',\n    timestamp: c.commit?.author?.date,\n    source: 'github',\n    metadata: {\n      sha: c.sha?.slice(0, 12),\n      message: c.commit?.message?.slice(0, 200),\n      author: c.commit?.author?.name,\n    }\n  }))\n);\n\nconst deployLogs = $('Fetch Deploy Logs').all().flatMap(item =>\n  (Array.isArray(item.json) ? item.json : [item.json]).map(d => ({\n    task_id: d.task_id || null,\n    event_type: 'deploy',\n    timestamp: d.timestamp || d.created_at,\n    source: d.platform || 'deploy',\n    metadata: {\n      service: d.service || d.name,\n      status: d.status,\n      url: d.url,\n    }\n  }))\n);\n\nconst aiLogs = $('Receive AI Logs (Webhook)').all().map(item => ({\n  task_id: item.json.task_id,\n  event_type: 'ai',\n  timestamp: item.json.timestamp,\n  source: `proxy:${item.json.provider}`,\n  metadata: {\n    provider: item.json.provider,\n    prompt_snippet: (item.json.prompt || '').slice(0, 100),\n    has_output: !!item.json.response,\n  }\n}));\n\nreturn [{ json: { events: [...commits, ...deployLogs, ...aiLogs] } }];"
       },
       "id": "normalize-events",
       "name": "Normalize Events",
@@ -93,7 +93,7 @@
         }
       },
       "id": "trigger-score",
-      "name": "Trigger EAS Scoring",
+      "name": "Trigger TraceOps Scoring",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [660, 400]
@@ -114,7 +114,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const report = $input.first().json;\nconst score = report?.summary?.average_score ?? 0;\nconst grade = report?.summary?.score_grade ?? 'N/A';\nconst bottlenecks = (report?.analysis?.bottlenecks || []).slice(0,2);\nconst actions = (report?.analysis?.corrective_actions || []).slice(0,3);\n\nconst summary = [\n  `📊 EAS Daily Audit — ${report?.meta?.date}`,\n  `Score: ${score}/100 (${grade})`,\n  `Tasks: ${report?.summary?.completed_tasks}/${report?.summary?.total_tasks} completed`,\n  '',\n  '🔴 Bottlenecks:',\n  ...bottlenecks.map((b,i) => `${i+1}. ${b.title} [${b.classification}]`),\n  '',\n  '⚡ Actions:',\n  ...actions.map((a,i) => `${i+1}. ${a.action}`),\n].join('\\n');\n\nreturn [{ json: { summary, raw_report: report } }];"
+        "jsCode": "const report = $input.first().json;\nconst score = report?.summary?.average_score ?? 0;\nconst grade = report?.summary?.score_grade ?? 'N/A';\nconst bottlenecks = (report?.analysis?.bottlenecks || []).slice(0,2);\nconst actions = (report?.analysis?.corrective_actions || []).slice(0,3);\n\nconst summary = [\n  `📊 TraceOps Daily Audit — ${report?.meta?.date}`,\n  `Score: ${score}/100 (${grade})`,\n  `Tasks: ${report?.summary?.completed_tasks}/${report?.summary?.total_tasks} completed`,\n  '',\n  '🔴 Bottlenecks:',\n  ...bottlenecks.map((b,i) => `${i+1}. ${b.title} [${b.classification}]`),\n  '',\n  '⚡ Actions:',\n  ...actions.map((a,i) => `${i+1}. ${a.action}`),\n].join('\\n');\n\nreturn [{ json: { summary, raw_report: report } }];"
       },
       "id": "format-output",
       "name": "Format Report Summary",
@@ -132,7 +132,7 @@
         "options": {}
       },
       "id": "store-events",
-      "name": "Store Events in EAS DB",
+      "name": "Store Events in TraceOps DB",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [660, 600]
@@ -178,11 +178,11 @@
     },
     "Normalize Events": {
       "main": [[
-        { "node": "Trigger EAS Scoring", "type": "main", "index": 0 },
-        { "node": "Store Events in EAS DB", "type": "main", "index": 0 }
+        { "node": "Trigger TraceOps Scoring", "type": "main", "index": 0 },
+        { "node": "Store Events in TraceOps DB", "type": "main", "index": 0 }
       ]]
     },
-    "Trigger EAS Scoring": {
+    "Trigger TraceOps Scoring": {
       "main": [[{ "node": "Fetch Daily Report", "type": "main", "index": 0 }]]
     },
     "Fetch Daily Report": {
