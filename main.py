@@ -1,5 +1,5 @@
 """
-TraceOps AI v3 — FastAPI Application
+TraceOps AI — FastAPI Application
 """
 import time
 import uuid
@@ -7,6 +7,9 @@ import uuid
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+import os
 
 from app.api import events, metrics, proxy, reports, tasks
 from app.api.scheduler import router as scheduler_router
@@ -17,33 +20,32 @@ from app.services.config_store import apply_db_config_to_singleton
 
 log = get_logger("main")
 
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 1. Configure JSON logging
     configure_logging(settings.LOG_LEVEL)
 
-    # 2. Create DB tables
     async with engine.begin() as conn:
-        from app.models.models import Task, Event, Score, Report, AIProxyLog  # noqa: F401
-        from app.services.webhook_durability import WebhookEvent               # noqa: F401
-        from app.services.config_store import ConfigStore                       # noqa: F401
+        from app.models.models import Task, Event, Score, Report, AIProxyLog  # noqa
+        from app.services.webhook_durability import WebhookEvent               # noqa
+        from app.services.config_store import ConfigStore                       # noqa
         await conn.run_sync(Base.metadata.create_all)
 
-    # 3. Load persisted config from DB (replaces ephemeral file)
     applied = await apply_db_config_to_singleton()
-    log.info("startup complete",
-             extra={"traceops_config_from_db": applied, "traceops_env": settings.APP_ENV})
-
+    log.info("startup complete", extra={
+        "traceops_config_from_db": applied,
+        "traceops_env": settings.APP_ENV,
+    })
     yield
-
     await engine.dispose()
     log.info("shutdown complete")
 
 
 app = FastAPI(
     title="TraceOps AI",
-    description="Production-grade developer execution tracker. AI-powered execution audit. Git + AI proxy + Deploy → daily scored report.",
+    description="AI-powered execution audit. Git + AI proxy + Deploy → daily scored report.",
     version="1.0.0",
     lifespan=lifespan,
     docs_url="/docs",
@@ -88,7 +90,7 @@ async def logging_middleware(request: Request, call_next):
         raise
 
 
-# Routers
+# ── API Routers ───────────────────────────────────────────────────────────────
 app.include_router(tasks.router)
 app.include_router(events.router)
 app.include_router(reports.router)
@@ -97,6 +99,12 @@ app.include_router(metrics.router)
 app.include_router(scheduler_router)
 
 
+# ── Static files ──────────────────────────────────────────────────────────────
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+# ── System endpoints ──────────────────────────────────────────────────────────
 @app.get("/health", tags=["System"])
 async def health():
     return {"status": "ok", "service": "traceops", "version": "1.0.0"}
@@ -104,7 +112,6 @@ async def health():
 
 @app.get("/health/deep", tags=["System"])
 async def health_deep():
-    """Full deep health: DB + Redis + Celery worker. Used by UptimeRobot."""
     from app.api.scheduler import check_db_alive, check_redis_alive, check_worker_alive
     db_s     = await check_db_alive()
     redis_s  = await check_redis_alive()
@@ -116,6 +123,18 @@ async def health_deep():
     }
 
 
-@app.get("/", tags=["System"])
-async def root():
-    return {"service": "TraceOps AI v1", "docs": "/docs", "health": "/health"}
+# ── Frontend routes ───────────────────────────────────────────────────────────
+@app.get("/app/{page:path}", include_in_schema=False)
+async def app_shell(page: str):
+    shell = os.path.join(STATIC_DIR, "app.html")
+    if os.path.exists(shell):
+        return FileResponse(shell)
+    return HTMLResponse("<h1>TraceOps AI</h1><p><a href='/docs'>API Docs</a></p>")
+
+
+@app.get("/", include_in_schema=False)
+async def landing():
+    index = os.path.join(STATIC_DIR, "index.html")
+    if os.path.exists(index):
+        return FileResponse(index)
+    return {"service": "TraceOps AI", "docs": "/docs", "health": "/health", "app": "/app/dashboard"}
