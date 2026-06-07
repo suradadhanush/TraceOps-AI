@@ -3,31 +3,17 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>TraceOps AI</title>
+<title>TraceOps AI — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="/static/css/main.css"/>
 <link rel="stylesheet" href="/static/css/app.css"/>
-<style>
-/* ── Page-level styles ───────────────────────────────────────────────── */
-.api-url-bar{
-  display:flex;align-items:center;gap:8px;
-  background:var(--bg-elevated);border:1px solid var(--border);
-  border-radius:var(--radius);padding:6px 12px;
-  font-family:var(--font-mono);font-size:12px;color:var(--text-muted);
-  margin-bottom:20px;
-}
-.api-url-bar span{color:var(--cyan);}
-.api-status{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-</style>
 </head>
 <body>
 <div class="app-layout">
-
-  <!-- Sidebar overlay (mobile) -->
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-  <!-- ── SIDEBAR ── -->
+  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
@@ -42,130 +28,83 @@
 
     <nav class="sidebar-nav">
       <div class="nav-section-label">Overview</div>
-      <div class="nav-item" data-page="dashboard">
-        <span class="nav-icon">📊</span> Dashboard
-      </div>
+      <div class="nav-item" data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</div>
 
       <div class="nav-section-label">Work</div>
-      <div class="nav-item" data-page="tasks">
-        <span class="nav-icon">✅</span> Tasks
-      </div>
-      <div class="nav-item" data-page="events">
-        <span class="nav-icon">⚡</span> Events
-      </div>
+      <div class="nav-item" data-page="tasks"><span class="nav-icon">✅</span> Tasks</div>
+      <div class="nav-item" data-page="events"><span class="nav-icon">⚡</span> Events</div>
+      <div class="nav-item" data-page="repositories"><span class="nav-icon">📁</span> Repositories</div>
 
       <div class="nav-section-label">Intelligence</div>
-      <div class="nav-item" data-page="reports">
-        <span class="nav-icon">📋</span> Reports
-      </div>
-      <div class="nav-item" data-page="metrics">
-        <span class="nav-icon">📈</span> Metrics
-      </div>
+      <div class="nav-item" data-page="reports"><span class="nav-icon">📋</span> Reports</div>
+      <div class="nav-item" data-page="metrics"><span class="nav-icon">📈</span> Metrics</div>
 
       <div class="nav-section-label">Tools</div>
-      <div class="nav-item" data-page="proxy">
-        <span class="nav-icon">🤖</span> AI Proxy
-      </div>
-      <div class="nav-item" data-page="deployments">
-        <span class="nav-icon">🚀</span> Deployments
-      </div>
+      <div class="nav-item" data-page="proxy"><span class="nav-icon">🤖</span> AI Proxy</div>
+      <div class="nav-item" data-page="deployments"><span class="nav-icon">🚀</span> Deployments</div>
 
-      <div class="nav-section-label">System</div>
-      <div class="nav-item" data-page="scheduler">
-        <span class="nav-icon">⏱️</span> Scheduler
-      </div>
-      <div class="nav-item" data-page="settings">
-        <span class="nav-icon">⚙️</span> Settings
-      </div>
+      <div class="nav-section-label">Account</div>
+      <div class="nav-item" data-page="integrations"><span class="nav-icon">🔌</span> Integrations</div>
+      <div class="nav-item" data-page="settings"><span class="nav-icon">⚙️</span> Settings</div>
 
-      <div style="margin-top:auto;padding-top:12px;border-top:1px solid var(--border);margin-top:16px;">
-        <a href="/" class="nav-item" style="color:var(--text-muted);">
-          <span class="nav-icon">🏠</span> Landing Page
-        </a>
-        <a href="https://traceops-ai.onrender.com/docs" target="_blank" class="nav-item" style="color:var(--text-muted);">
-          <span class="nav-icon">📖</span> API Docs ↗
-        </a>
+      <div style="margin-top:auto;padding-top:12px;border-top:1px solid var(--border);margin-top:16px">
+        <a href="/" class="nav-item" style="color:var(--text-muted)"><span class="nav-icon">🏠</span> Home</a>
+        <a href="https://traceops-ai.onrender.com/docs" target="_blank" class="nav-item" style="color:var(--text-muted)"><span class="nav-icon">📖</span> API Docs ↗</a>
       </div>
     </nav>
 
     <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="user-avatar">T</div>
-        <div>
-          <div class="user-name">TraceOps</div>
-          <div class="user-role" id="api-status-text">Checking API...</div>
+      <div class="sidebar-user" id="sidebar-user" onclick="showPage('settings')">
+        <div id="sidebar-avatar"><div class="user-avatar">?</div></div>
+        <div style="flex:1;min-width:0">
+          <div class="user-name truncate" id="sidebar-name">Loading...</div>
+          <div class="user-role truncate" id="sidebar-email"></div>
         </div>
-        <div class="api-status dot" id="api-dot" style="margin-left:auto"></div>
+        <div class="api-status dot dot-green" id="api-dot"></div>
       </div>
     </div>
   </aside>
 
-  <!-- ── MAIN ── -->
+  <!-- MAIN -->
   <div class="main-content">
     <div class="topbar">
       <div class="topbar-left">
-        <button class="topbar-btn" id="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebar-overlay').classList.toggle('show')">☰</button>
+        <button class="topbar-btn" id="menu-btn">☰</button>
         <div>
           <div class="page-title" id="page-title">Dashboard</div>
-          <div class="page-subtitle" id="page-subtitle">Today's execution overview</div>
+          <div class="page-subtitle" id="page-subtitle"></div>
         </div>
       </div>
       <div class="topbar-right">
-        <div class="live-indicator">
-          <div class="dot dot-green dot-pulse"></div>
-          LIVE
-        </div>
-        <button class="topbar-btn" onclick="refreshPage()" title="Refresh data">↻</button>
-        <button class="topbar-btn notif" id="notif-btn" title="Notifications">
-          🔔
-          <div class="notif-badge" id="notif-badge" style="display:none"></div>
-        </button>
-        <button class="topbar-btn" onclick="showPage('settings')" title="Settings">⚙️</button>
+        <div class="live-indicator"><div class="dot dot-green dot-pulse"></div>LIVE</div>
+        <button class="topbar-btn" onclick="refreshPage()" title="Refresh">↻</button>
+        <button class="topbar-btn" onclick="showPage('integrations')" title="Integrations">🔌</button>
+        <button class="topbar-btn" onclick="handleLogout()" title="Sign out">🚪</button>
       </div>
     </div>
-
-    <!-- Page content container -->
     <div class="page-content" id="page-content">
-      <div class="empty-state">
-        <div class="spinner"></div>
-        <div class="empty-title">Loading...</div>
-      </div>
+      <div class="empty-state"><div class="spinner"></div></div>
     </div>
   </div>
 </div>
 
-<!-- Toast container -->
 <div id="toast-container"></div>
 
-<!-- ── MODALS ── -->
-
-<!-- Start Task Modal -->
+<!-- START TASK MODAL -->
 <div class="modal-overlay" id="modal-start-task" style="display:none">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">⚡ Start New Task</div>
-      <button class="modal-close" onclick="closeModal('modal-start-task')">✕</button>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Goal *</label>
-      <input class="form-input" id="task-goal" placeholder="e.g. Fix JWT refresh bug in auth service" maxlength="500"/>
-    </div>
+    <div class="modal-header"><div class="modal-title">⚡ Start New Task</div><button class="modal-close" onclick="closeModal('modal-start-task')">✕</button></div>
+    <div class="form-group"><label class="form-label">Goal *</label><input class="form-input" id="task-goal" placeholder="e.g. Fix JWT refresh bug" maxlength="500"/></div>
     <div style="height:14px"></div>
-    <div class="form-group">
-      <label class="form-label">Target Level (0–5) *</label>
+    <div class="form-group"><label class="form-label">Target Level *</label>
       <select class="form-input form-select" id="task-level">
-        <option value="1">L1 — Draft</option>
-        <option value="2">L2 — Working</option>
-        <option value="3">L3 — Tested</option>
-        <option value="4" selected>L4 — Deployed</option>
+        <option value="1">L1 — Draft</option><option value="2">L2 — Working</option>
+        <option value="3">L3 — Tested</option><option value="4" selected>L4 — Deployed</option>
         <option value="5">L5 — Shipped ✓</option>
       </select>
     </div>
     <div style="height:14px"></div>
-    <div class="form-group">
-      <label class="form-label">Project ID (optional)</label>
-      <input class="form-input" id="task-project" placeholder="e.g. traceops-ai"/>
-    </div>
+    <div class="form-group"><label class="form-label">Project ID (optional)</label><input class="form-input" id="task-project" placeholder="e.g. traceops-ai"/></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-start-task')">Cancel</button>
       <button class="btn btn-primary" id="btn-start-task" onclick="submitStartTask()">⚡ Start Task</button>
@@ -173,103 +112,62 @@
   </div>
 </div>
 
-<!-- End Task Modal -->
+<!-- END TASK MODAL -->
 <div class="modal-overlay" id="modal-end-task" style="display:none">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">✅ Complete Task</div>
-      <button class="modal-close" onclick="closeModal('modal-end-task')">✕</button>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Task ID *</label>
-      <input class="form-input" id="end-task-id" placeholder="Task ID"/>
-    </div>
+    <div class="modal-header"><div class="modal-title">✅ Complete Task</div><button class="modal-close" onclick="closeModal('modal-end-task')">✕</button></div>
+    <div class="form-group"><label class="form-label">Task ID *</label><input class="form-input" id="end-task-id" placeholder="Task ID"/></div>
     <div style="height:14px"></div>
-    <div class="form-group">
-      <label class="form-label">Final Level Achieved *</label>
+    <div class="form-group"><label class="form-label">Final Level *</label>
       <select class="form-input form-select" id="end-task-level">
-        <option value="0">L0 — No Output</option>
-        <option value="1">L1 — Draft</option>
-        <option value="2">L2 — Working</option>
-        <option value="3">L3 — Tested</option>
-        <option value="4" selected>L4 — Deployed</option>
-        <option value="5">L5 — Shipped ✓</option>
+        <option value="0">L0 — No Output</option><option value="1">L1 — Draft</option>
+        <option value="2">L2 — Working</option><option value="3">L3 — Tested</option>
+        <option value="4" selected>L4 — Deployed</option><option value="5">L5 — Shipped ✓</option>
       </select>
     </div>
     <div style="height:8px"></div>
-    <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:var(--radius);padding:12px;font-size:12px;color:var(--text-secondary)">
-      ⚠️ Level 5 requires a successful deployment validation. Run <code style="color:var(--cyan)">POST /report/validate</code> first.
-    </div>
+    <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:var(--radius);padding:12px;font-size:12px;color:var(--text-secondary)">⚠️ Level 5 requires deployment validation. Run POST /report/validate first.</div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-end-task')">Cancel</button>
-      <button class="btn btn-success" id="btn-end-task" onclick="submitEndTask()">✅ Complete Task</button>
+      <button class="btn btn-success" id="btn-end-task" onclick="submitEndTask()">✅ Complete</button>
     </div>
   </div>
 </div>
 
-<!-- Ingest Event Modal -->
-<div class="modal-overlay" id="modal-event" style="display:none">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">⚡ Log Event</div>
-      <button class="modal-close" onclick="closeModal('modal-event')">✕</button>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Event Type *</label>
-      <select class="form-input form-select" id="event-type">
-        <option value="commit">commit</option>
-        <option value="deploy">deploy</option>
-        <option value="ai">ai</option>
-        <option value="error">error</option>
-      </select>
-    </div>
-    <div style="height:14px"></div>
-    <div class="form-group">
-      <label class="form-label">Task ID (optional — auto-assigns if blank)</label>
-      <input class="form-input" id="event-task-id" placeholder="Leave blank for auto-assignment"/>
-    </div>
-    <div style="height:14px"></div>
-    <div class="form-group">
-      <label class="form-label">Metadata (JSON)</label>
-      <textarea class="form-input form-textarea" id="event-metadata" placeholder='{"message": "feat: add endpoint", "status": "success"}'></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('modal-event')">Cancel</button>
-      <button class="btn btn-primary" id="btn-event" onclick="submitEvent()">⚡ Log Event</button>
-    </div>
-  </div>
-</div>
-
-<!-- Manual Score Modal -->
+<!-- MANUAL SCORE MODAL -->
 <div class="modal-overlay" id="modal-manual-score" style="display:none">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">🎯 Submit Manual Score</div>
-      <button class="modal-close" onclick="closeModal('modal-manual-score')">✕</button>
-    </div>
-    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Compare your honest judgment with the system score to calibrate accuracy.</p>
-    <div class="form-group">
-      <label class="form-label">Date (YYYY-MM-DD)</label>
-      <input class="form-input" id="ms-date" type="date"/>
-    </div>
-    <div style="height:14px"></div>
-    <div class="form-group">
-      <label class="form-label">Your Honest Score (0–100)</label>
-      <input class="form-input" id="ms-score" type="number" min="0" max="100" placeholder="e.g. 72"/>
-    </div>
-    <div style="height:14px"></div>
-    <div class="form-group">
-      <label class="form-label">Task ID (optional)</label>
-      <input class="form-input" id="ms-task" placeholder="Leave blank for daily average"/>
-    </div>
-    <div style="height:14px"></div>
-    <div class="form-group">
-      <label class="form-label">Notes</label>
-      <input class="form-input" id="ms-notes" placeholder="e.g. Got blocked on auth for 2h"/>
-    </div>
+    <div class="modal-header"><div class="modal-title">🎯 Submit Manual Score</div><button class="modal-close" onclick="closeModal('modal-manual-score')">✕</button></div>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Compare your honest judgment with the system score.</p>
+    <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="ms-date" type="date"/></div>
+    <div style="height:12px"></div>
+    <div class="form-group"><label class="form-label">Your Score (0–100)</label><input class="form-input" id="ms-score" type="number" min="0" max="100" placeholder="72"/></div>
+    <div style="height:12px"></div>
+    <div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="ms-notes" placeholder="What actually happened today"/></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('modal-manual-score')">Cancel</button>
-      <button class="btn btn-primary" id="btn-ms" onclick="submitManualScore()">Submit Score</button>
+      <button class="btn btn-primary" id="btn-ms" onclick="submitManualScore()">Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- EVENT MODAL -->
+<div class="modal-overlay" id="modal-event" style="display:none">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">⚡ Log Event</div><button class="modal-close" onclick="closeModal('modal-event')">✕</button></div>
+    <div class="form-group"><label class="form-label">Type *</label>
+      <select class="form-input form-select" id="event-type">
+        <option value="commit">commit</option><option value="deploy">deploy</option>
+        <option value="ai">ai</option><option value="error">error</option>
+      </select>
+    </div>
+    <div style="height:12px"></div>
+    <div class="form-group"><label class="form-label">Task ID (auto-assigns if blank)</label><input class="form-input" id="event-task-id" placeholder="Optional"/></div>
+    <div style="height:12px"></div>
+    <div class="form-group"><label class="form-label">Metadata (JSON)</label><textarea class="form-input form-textarea" id="event-metadata" placeholder='{"message": "feat: add feature"}'></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modal-event')">Cancel</button>
+      <button class="btn btn-primary" id="btn-event" onclick="submitEvent()">⚡ Log</button>
     </div>
   </div>
 </div>
@@ -277,17 +175,17 @@
 <script src="/static/js/core.js"></script>
 <script src="/static/js/pages.js"></script>
 <script>
-// ── App bootstrap ───────────────────────────────────────────────────────────
 const PAGE_META = {
-  dashboard:   { title: 'Dashboard',   subtitle: "Today's execution overview" },
-  tasks:       { title: 'Tasks',       subtitle: 'Manage your active and completed tasks' },
-  events:      { title: 'Events',      subtitle: 'Real-time event stream' },
-  reports:     { title: 'Reports',     subtitle: 'Daily execution audit reports' },
-  metrics:     { title: 'Metrics',     subtitle: 'System accuracy and calibration' },
-  proxy:       { title: 'AI Proxy',    subtitle: 'Route AI calls and view logs' },
-  deployments: { title: 'Deployments', subtitle: 'Validate deployment health' },
-  scheduler:   { title: 'Scheduler',   subtitle: 'Background jobs and worker health' },
-  settings:    { title: 'Settings',    subtitle: 'Configure API and preferences' },
+  dashboard:    { title:'Dashboard',    subtitle:"Your execution overview" },
+  tasks:        { title:'Tasks',        subtitle:'Manage your tasks' },
+  events:       { title:'Events',       subtitle:'Real-time event stream' },
+  repositories: { title:'Repositories', subtitle:'Your GitHub repositories' },
+  reports:      { title:'Reports',      subtitle:'Daily execution audit reports' },
+  metrics:      { title:'Metrics',      subtitle:'Accuracy and calibration' },
+  proxy:        { title:'AI Proxy',     subtitle:'Route AI calls through TraceOps' },
+  deployments:  { title:'Deployments',  subtitle:'Validate deployment health' },
+  integrations: { title:'Integrations', subtitle:'Connect your tools' },
+  settings:     { title:'Settings',     subtitle:'Account and configuration' },
 };
 
 let currentPage = 'dashboard';
@@ -297,146 +195,118 @@ function showPage(page) {
   const meta = PAGE_META[page] || {};
   document.getElementById('page-title').textContent    = meta.title    || page;
   document.getElementById('page-subtitle').textContent = meta.subtitle || '';
-
-  // Update active nav
-  document.querySelectorAll('.nav-item[data-page]').forEach(el => {
-    el.classList.toggle('active', el.dataset.page === page);
-  });
-
-  // Close mobile sidebar
+  document.querySelectorAll('.nav-item[data-page]').forEach(el =>
+    el.classList.toggle('active', el.dataset.page === page));
   document.getElementById('sidebar')?.classList.remove('open');
   document.getElementById('sidebar-overlay')?.classList.remove('show');
-
-  // Render page
   const content = document.getElementById('page-content');
   content.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
-
-  if (typeof PAGES[page] === 'function') {
-    PAGES[page](content);
-  } else {
-    content.innerHTML = `<div class="empty-state"><div class="empty-icon">🔧</div><div class="empty-title">Coming Soon</div><div class="empty-desc">${page} page is being built.</div></div>`;
-  }
-
-  // Update URL without reload
+  if (typeof PAGES[page] === 'function') PAGES[page](content);
+  else content.innerHTML = `<div class="empty-state"><div class="empty-icon">🔧</div><div class="empty-title">Coming Soon</div></div>`;
   history.replaceState({}, '', `/app/${page}`);
 }
 
-function refreshPage() {
-  showPage(currentPage);
-  toast('Refreshed', 'success', 1500);
+function refreshPage() { showPage(currentPage); }
+
+document.querySelectorAll('.nav-item[data-page]').forEach(el =>
+  el.addEventListener('click', () => showPage(el.dataset.page)));
+
+async function handleLogout() {
+  try { await fetch('/auth/logout', { method:'POST', credentials:'include' }); } catch {}
+  window.location.href = '/auth/login';
 }
 
-// Nav click handlers
-document.querySelectorAll('.nav-item[data-page]').forEach(el => {
-  el.addEventListener('click', () => showPage(el.dataset.page));
-});
-
-// Check API health on load
-async function checkAPIHealth() {
-  const dot  = document.getElementById('api-dot');
-  const text = document.getElementById('api-status-text');
+// Load current user on boot
+async function initUser() {
   try {
-    const r = await api.health();
-    if (r.status === 'ok') {
-      dot.classList.add('dot-green');
-      text.textContent = 'API Online';
-    } else {
-      dot.classList.add('dot-yellow');
-      text.textContent = 'API Degraded';
-    }
+    const user = await api.getMe();
+    CURRENT_USER = user;
+    document.getElementById('sidebar-avatar').innerHTML = renderAvatar(user, 32);
+    document.getElementById('sidebar-name').textContent  = user.name || user.email?.split('@')[0] || 'User';
+    document.getElementById('sidebar-email').textContent = user.github_username ? `@${user.github_username}` : user.email || '';
+    document.getElementById('api-dot').className = 'dot dot-green api-status';
   } catch {
-    dot.classList.add('dot-red');
-    text.textContent = 'API Offline';
+    window.location.href = '/auth/login';
   }
 }
 
-// Init
-window.addEventListener('DOMContentLoaded', () => {
-  checkAPIHealth();
-  // Route from URL
-  const path = location.pathname.replace('/app/', '') || 'dashboard';
-  showPage(path === '/' ? 'dashboard' : path);
-  // Set today's date in manual score modal
-  document.getElementById('ms-date').value = new Date().toISOString().split('T')[0];
-});
-
-// ── Modal submit functions ──────────────────────────────────────────────────
+// Modal handlers
 async function submitStartTask() {
-  const goal    = document.getElementById('task-goal').value.trim();
-  const level   = parseInt(document.getElementById('task-level').value);
-  const project = document.getElementById('task-project').value.trim();
-  if (!goal) { toast('Goal is required', 'error'); return; }
-
-  const btn = document.getElementById('btn-start-task');
-  setLoading(btn, true);
+  const goal=document.getElementById('task-goal').value.trim();
+  const level=parseInt(document.getElementById('task-level').value);
+  const project=document.getElementById('task-project').value.trim();
+  if(!goal){toast('Goal is required','error');return;}
+  const btn=document.getElementById('btn-start-task'); setLoading(btn,true);
   try {
-    const r = await api.startTask({ goal, target_level: level, project_id: project || undefined });
+    const r=await api.startTask({goal,target_level:level,project_id:project||undefined});
     closeModal('modal-start-task');
-    toast(`Task started! ID: ${r.task_id.slice(0,8)}...`, 'success');
-    // Copy task_id to clipboard
+    toast(`Task started! ID: ${r.task_id.slice(0,8)}...`,'success');
     await copyToClipboard(r.task_id);
-    document.getElementById('task-goal').value = '';
-    if (currentPage === 'tasks' || currentPage === 'dashboard') refreshPage();
-  } catch(e) { toast(e.message, 'error'); }
-  finally { setLoading(btn, false); }
+    document.getElementById('task-goal').value='';
+    if(['tasks','dashboard'].includes(currentPage)) refreshPage();
+  } catch(e){toast(e.message,'error');} finally{setLoading(btn,false);}
 }
 
 async function submitEndTask() {
-  const task_id     = document.getElementById('end-task-id').value.trim();
-  const final_level = parseInt(document.getElementById('end-task-level').value);
-  if (!task_id) { toast('Task ID is required', 'error'); return; }
-
-  const btn = document.getElementById('btn-end-task');
-  setLoading(btn, true);
+  const task_id=document.getElementById('end-task-id').value.trim();
+  const final_level=parseInt(document.getElementById('end-task-level').value);
+  if(!task_id){toast('Task ID required','error');return;}
+  const btn=document.getElementById('btn-end-task'); setLoading(btn,true);
   try {
-    const r = await api.endTask({ task_id, final_level });
+    const r=await api.endTask({task_id,final_level});
     closeModal('modal-end-task');
-    toast(`Task completed! Score: ${r.score?.final_score ?? '—'}`, 'success');
-    document.getElementById('end-task-id').value = '';
-    if (currentPage === 'tasks' || currentPage === 'dashboard') refreshPage();
-  } catch(e) { toast(e.message, 'error'); }
-  finally { setLoading(btn, false); }
+    toast(`Completed! Score: ${r.score?.final_score??'—'}`,'success');
+    document.getElementById('end-task-id').value='';
+    if(['tasks','dashboard'].includes(currentPage)) refreshPage();
+  } catch(e){toast(e.message,'error');} finally{setLoading(btn,false);}
 }
 
 async function submitEvent() {
-  const event_type = document.getElementById('event-type').value;
-  const task_id    = document.getElementById('event-task-id').value.trim();
-  const metaStr    = document.getElementById('event-metadata').value.trim();
-  let metadata = {};
-  if (metaStr) {
-    try { metadata = JSON.parse(metaStr); } catch { toast('Invalid JSON in metadata', 'error'); return; }
-  }
-
-  const btn = document.getElementById('btn-event');
-  setLoading(btn, true);
+  const event_type=document.getElementById('event-type').value;
+  const task_id=document.getElementById('event-task-id').value.trim();
+  const metaStr=document.getElementById('event-metadata').value.trim();
+  let metadata={};
+  if(metaStr){try{metadata=JSON.parse(metaStr);}catch{toast('Invalid JSON','error');return;}}
+  const btn=document.getElementById('btn-event'); setLoading(btn,true);
   try {
-    await api.ingestEvent({ event_type, task_id: task_id || undefined, metadata });
+    await api.ingestEvent({event_type,task_id:task_id||undefined,metadata});
     closeModal('modal-event');
-    toast(`Event logged: ${event_type}`, 'success');
-    document.getElementById('event-metadata').value = '';
-    if (currentPage === 'events') refreshPage();
-  } catch(e) { toast(e.message, 'error'); }
-  finally { setLoading(btn, false); }
+    toast(`Event logged: ${event_type}`,'success');
+    document.getElementById('event-metadata').value='';
+    if(currentPage==='events') refreshPage();
+  } catch(e){toast(e.message,'error');} finally{setLoading(btn,false);}
 }
 
 async function submitManualScore() {
-  const date       = document.getElementById('ms-date').value;
-  const score      = parseInt(document.getElementById('ms-score').value);
-  const task_id    = document.getElementById('ms-task').value.trim();
-  const notes      = document.getElementById('ms-notes').value.trim();
-  if (!date || isNaN(score)) { toast('Date and score required', 'error'); return; }
-  if (score < 0 || score > 100) { toast('Score must be 0–100', 'error'); return; }
-
-  const btn = document.getElementById('btn-ms');
-  setLoading(btn, true);
+  const date=document.getElementById('ms-date').value;
+  const score=parseInt(document.getElementById('ms-score').value);
+  const notes=document.getElementById('ms-notes').value.trim();
+  if(!date||isNaN(score)){toast('Date and score required','error');return;}
+  const btn=document.getElementById('btn-ms'); setLoading(btn,true);
   try {
-    const r = await api.submitManualScore({ date, human_score: score, task_id: task_id || undefined, notes: notes || undefined });
+    const r=await api.submitManualScore({date,human_score:score,notes:notes||undefined});
     closeModal('modal-manual-score');
-    const dev = r.deviation !== null ? ` (deviation: ${r.deviation} pts)` : '';
-    toast(`Score recorded${dev}`, r.deviation_ok === false ? 'warn' : 'success');
-  } catch(e) { toast(e.message, 'error'); }
-  finally { setLoading(btn, false); }
+    toast(`Score recorded${r.deviation!==null?` (dev: ${r.deviation}pts)`:''}`,'success');
+  } catch(e){toast(e.message,'error');} finally{setLoading(btn,false);}
 }
+
+function prefillEndTask(id) { document.getElementById('end-task-id').value=id; openModal('modal-end-task'); }
+
+function showInfoModal(title,html) {
+  document.getElementById('modal-info')?.remove();
+  const m=document.createElement('div');
+  m.className='modal-overlay'; m.id='modal-info';
+  m.innerHTML=`<div class="modal"><div class="modal-header"><div class="modal-title">${title}</div><button class="modal-close" onclick="document.getElementById('modal-info').remove()">✕</button></div>${html}</div>`;
+  m.addEventListener('click',e=>{if(e.target===m)m.remove();});
+  document.body.appendChild(m);
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('ms-date').value=new Date().toISOString().split('T')[0];
+  await initUser();
+  const path=location.pathname.replace('/app/','').replace('/app','').trim()||'dashboard';
+  showPage(path);
+});
 </script>
 </body>
 </html>

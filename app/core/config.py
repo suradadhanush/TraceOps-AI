@@ -18,14 +18,14 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
 
     # LLM Analyzer
-    LLM_PROVIDER: str = "openai"  # "openai" | "anthropic"
+    LLM_PROVIDER: str = "openai"
     LLM_MODEL: str = "gpt-4o"
 
     # Loop Detection
     EMBEDDING_SIMILARITY_THRESHOLD: float = 0.85
     LOOP_MIN_OCCURRENCES: int = 3
 
-    # Scoring velocity thresholds (hours)
+    # Scoring
     VELOCITY_FAST_THRESHOLD_HOURS: int = 3
     VELOCITY_MED_THRESHOLD_HOURS: int = 6
 
@@ -33,6 +33,17 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     SECRET_KEY: str = "change-me-in-production"
     LOG_LEVEL: str = "INFO"
+
+    # OAuth
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    FRONTEND_URL: str = "https://traceops-ai.onrender.com"
+    SESSION_EXPIRE_DAYS: int = 30
+
+    # Integration webhooks (optional)
+    GITHUB_WEBHOOK_SECRET: str = ""
 
 
 settings = Settings()
