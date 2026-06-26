@@ -47,6 +47,16 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
 
   # ── Worker ───────────────────────────────────────────────────────────────
   - type: worker
@@ -90,6 +100,31 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: FRONTEND_URL
+        fromService:
+          name: traceops-api
+          type: web
+          envVarKey: FRONTEND_URL
+      - key: GITHUB_CLIENT_ID
+        fromService:
+          name: traceops-api
+          type: web
+          envVarKey: GITHUB_CLIENT_ID
+      - key: GITHUB_CLIENT_SECRET
+        fromService:
+          name: traceops-api
+          type: web
+          envVarKey: GITHUB_CLIENT_SECRET
+      - key: GOOGLE_CLIENT_ID
+        fromService:
+          name: traceops-api
+          type: web
+          envVarKey: GOOGLE_CLIENT_ID
+      - key: GOOGLE_CLIENT_SECRET
+        fromService:
+          name: traceops-api
+          type: web
+          envVarKey: GOOGLE_CLIENT_SECRET
 
   # ── Redis ────────────────────────────────────────────────────────────────
   - type: redis
