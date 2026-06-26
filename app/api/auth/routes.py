@@ -164,10 +164,11 @@ def _login_page(error: str = "") -> HTMLResponse:
     error_block = f'<div class="error">⚠️ {error}</div>' if error else ""
     github_btn  = GITHUB_BTN if settings.GITHUB_CLIENT_ID else GITHUB_DISABLED
     google_btn  = GOOGLE_BTN if settings.GOOGLE_CLIENT_ID else GOOGLE_DISABLED
-    html = LOGIN_HTML.format(
-        error_block=error_block,
-        github_btn=github_btn,
-        google_btn=google_btn,
+    html = (
+        LOGIN_HTML
+        .replace("{error_block}", error_block)
+        .replace("{github_btn}", github_btn)
+        .replace("{google_btn}", google_btn)
     )
     return HTMLResponse(html)
 
