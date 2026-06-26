@@ -20,6 +20,7 @@ from app.api.scheduler import router as scheduler_router
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.logger import configure_logging, get_logger
+from app.core.schema_migrations import run_compat_migrations
 from app.services.config_store import apply_db_config_to_singleton
 
 log = get_logger("main")
@@ -38,6 +39,7 @@ async def lifespan(app: FastAPI):
         from app.services.webhook_durability import WebhookEvent
         from app.services.config_store import ConfigStore
         await conn.run_sync(Base.metadata.create_all)
+        await run_compat_migrations(conn)
     await apply_db_config_to_singleton()
     log.info("startup complete", extra={"traceops_env": settings.APP_ENV})
     yield
