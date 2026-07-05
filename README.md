@@ -3,29 +3,6 @@
 Production-grade developer execution tracker. Aggregates AI usage, Git events, and deploy logs into a scored daily audit.
 
 ---
-## Problem
-
-Modern developers rely heavily on AI.
-
-But teams cannot answer:
-
-- Is AI accelerating delivery?
-- Is AI causing rework?
-- Which tasks consume the most time?
-- Where are developers stuck in loops?
-
-TraceOps AI turns developer activity into measurable execution intelligence.
-
----
-
-## Why I Build It
-
-While building AnonCampus and other production systems,
-I noticed I could not quantify whether AI was helping or hurting execution.
-
-TraceOps AI was built to answer that question.
-
----
 
 ## Quick Start
 
