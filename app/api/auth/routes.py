@@ -1,5 +1,10 @@
 """
-Auth API Routes
+Auth API Routes — FIXED VERSION
+
+Bug fixed: LOGIN_HTML.format() was crashing with KeyError because the embedded
+CSS contains curly braces (e.g. `{box-sizing: border-box}`) which Python's
+str.format() tries to interpret as placeholders. Replaced with placeholder
+tokens + .replace() which is brace-safe.
 
 GET  /auth/login/github          → redirect to GitHub OAuth
 GET  /auth/callback/github       → handle GitHub callback
@@ -48,10 +53,6 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _make_state(db_state_obj: OAuthState) -> str:
-    return db_state_obj.state
-
-
 async def _save_state(db: AsyncSession, provider: str, user_id: Optional[str] = None) -> str:
     state = secrets.token_urlsafe(32)
     obj   = OAuthState(
@@ -93,6 +94,10 @@ def _set_session_cookie(response: Response, token: str) -> None:
 
 
 # ── Login page HTML ───────────────────────────────────────────────────────────
+# CRITICAL FIX: This template uses __TOKEN__ style placeholders instead of
+# {placeholder} because the CSS below contains literal curly braces which
+# would break Python's str.format(). We use .replace() at render time instead,
+# which is completely brace-safe.
 
 LOGIN_HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -141,12 +146,12 @@ h1{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;text-align:cente
     </svg>
     <span class="logo-text">Trace<span>Ops</span> AI</span>
   </div>
-  {error_block}
+  __ERROR_BLOCK__
   <h1>Welcome back</h1>
   <p class="sub">Sign in to your execution intelligence dashboard.<br/>Track commits, AI usage, and deploy velocity.</p>
-  {github_btn}
+  __GITHUB_BTN__
   <div class="divider">or</div>
-  {google_btn}
+  __GOOGLE_BTN__
   <p class="note">By signing in you agree to our terms.<br/>Your data is isolated to your account only.<br/><a href="/">← Back to home</a></p>
 </div>
 </body>
@@ -161,13 +166,19 @@ GOOGLE_DISABLED = '<div class="btn btn-google" style="opacity:.4;cursor:not-allo
 
 
 def _login_page(error: str = "") -> HTMLResponse:
+    """
+    FIXED: uses .replace() with unique __TOKEN__ markers instead of .format(),
+    so the embedded CSS's curly braces never get misinterpreted as placeholders.
+    """
     error_block = f'<div class="error">⚠️ {error}</div>' if error else ""
     github_btn  = GITHUB_BTN if settings.GITHUB_CLIENT_ID else GITHUB_DISABLED
     google_btn  = GOOGLE_BTN if settings.GOOGLE_CLIENT_ID else GOOGLE_DISABLED
-    html = LOGIN_HTML.format(
-        error_block=error_block,
-        github_btn=github_btn,
-        google_btn=google_btn,
+
+    html = (
+        LOGIN_HTML
+        .replace("__ERROR_BLOCK__", error_block)
+        .replace("__GITHUB_BTN__", github_btn)
+        .replace("__GOOGLE_BTN__", google_btn)
     )
     return HTMLResponse(html)
 
@@ -176,7 +187,6 @@ def _login_page(error: str = "") -> HTMLResponse:
 
 @router.get("/login", include_in_schema=False)
 async def login_page(request: Request, error: str = "", db: AsyncSession = Depends(get_db)):
-    # Already logged in → redirect to dashboard
     user = await get_optional_user(request, db)
     if user:
         return RedirectResponse("/app/dashboard", status_code=302)
@@ -209,7 +219,6 @@ async def github_callback(
     except HTTPException:
         return RedirectResponse("/auth/login?error=Invalid+OAuth+state", status_code=302)
 
-    # Exchange code for token
     async with httpx.AsyncClient() as client:
         token_resp = await client.post(
             GITHUB_TOKEN_URL,
@@ -227,7 +236,6 @@ async def github_callback(
         if not access_token:
             return RedirectResponse("/auth/login?error=GitHub+auth+failed", status_code=302)
 
-        # Fetch user
         user_resp = await client.get(
             GITHUB_USER_URL,
             headers={"Authorization": f"Bearer {access_token}", "Accept": "application/json"},
@@ -235,7 +243,6 @@ async def github_callback(
         )
         github_user = user_resp.json()
 
-        # Fetch primary email if not public
         email = github_user.get("email")
         if not email:
             email_resp = await client.get(
